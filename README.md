@@ -1,6 +1,6 @@
 # LG Tanker Fuel Bridge
 
-An optional automation add-on for Project Zomboid Build 42.20. It connects fuel from these supported tankers to a stationary barrel in **LG Extended Plumbing's** building supply, which **LG Extended Electricity** can then use to refuel a generator:
+An optional automation add-on for Project Zomboid Build 42.20. It connects fuel from installed supported tanker mods to a stationary barrel in **LG Extended Plumbing's** building supply, which **LG Extended Electricity** can then use to refuel a generator:
 
 - **rSemiTruck W900 cistern:** the gasoline tank part `2000TankG` must be installed (not the water tank).
 - **82 Oshkosh M967 tanker trailer:** the `1000FuelTank` must be installed.
@@ -24,6 +24,6 @@ The rSemiTruck mod also has a manual alternative: right-click its W900 cistern a
 - Transfer is server-authoritative in multiplayer. It only moves fuel that is actually in the tanker and stops when the tanker is empty or the barrel is full.
 - Ordinary cars' and boats' engine tanks are deliberately not supported as tanker sources.
 
-Required mods: `rSemiTruck`, `LGExtendedPlumbing`, and `LGExtendedElectricity`. `82oshkoshM911` and `isoContainers` are optional; their supported tanker trailers are recognized when those mods are installed and enabled.
+Required mods: `LGExtendedPlumbing` and `LGExtendedElectricity`. The tanker mods (`rSemiTruck`, `82oshkoshM911`, and `isoContainers`) are optional; their supported tanker trailers are recognized when those mods are installed and enabled.
 
 The transfer range and rate are set in `42.20/media/lua/shared/LGTankerFuelBridge/Bridge.lua` (`RANGE` and `RATE_LITRES_PER_TEN_MINUTES`).

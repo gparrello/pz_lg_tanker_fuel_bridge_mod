@@ -1,5 +1,5 @@
 name=LG Tanker Fuel Bridge
 id=LGTankerFuelBridge
-description=Lets an opted-in LG Extended Plumbing collector barrel automatically refill from nearby supported tanker trailers: rSemiTruck W900 cistern, Oshkosh M967 and ISO M3. Requires rSemiTruck, LG Extended Plumbing and LG Extended Electricity.
+description=Lets an opted-in LG Extended Plumbing collector barrel automatically refill from nearby supported tanker trailers: rSemiTruck W900 cistern, Oshkosh M967 and ISO M3. Requires LG Extended Plumbing and LG Extended Electricity.
 versionMin=42.20.0
-require=\rSemiTruck,\LGExtendedPlumbing,\LGExtendedElectricity
+require=\LGExtendedPlumbing,\LGExtendedElectricity

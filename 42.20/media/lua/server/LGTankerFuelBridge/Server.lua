@@ -1,5 +1,4 @@
 require "LGTankerFuelBridge/Bridge"
-require "W900_CisternParts"
 
 local Bridge = LGTankerFuelBridge
 local previousVehiclePositions = setmetatable({}, { __mode = "k" })
@@ -61,7 +60,9 @@ end
 local function isInstalledContainerPart(part)
 	if not part or not part.isContainer or not part:isContainer() then return false end
 	local ok, installed = pcall(function()
-		return part:getInventoryItem() ~= nil or W900CisternParts.hasPartContainer(part)
+		local hasInstalledItem = part.getInventoryItem and part:getInventoryItem() ~= nil
+		local hasPartContainer = part.getItemContainer and part:getItemContainer() ~= nil
+		return hasInstalledItem or hasPartContainer
 	end)
 	return ok and installed == true
 end
@@ -77,9 +78,15 @@ end
 local function getFuelSourcePart(vehicle)
 	local scriptName = scriptLeafName(vehicle)
 	if scriptName == "SemiTrailerCistern" then
-		local part = W900CisternParts.getGasTankPart(vehicle)
-		if part and W900CisternParts.isValidGasSourcePart(part) then return part end
-		return nil
+		local gasPart = vehicle:getPartById("2000TankG")
+		if not isInstalledContainerPart(gasPart) then return nil end
+		if gasPart:getContainerContentType() ~= "Gasoline" then return nil end
+
+		-- The W900 cistern can be configured for either gasoline or water. Only
+		-- treat it as a fuel source when its gasoline tank is the installed tank.
+		local waterPart = vehicle:getPartById("2000TankW")
+		if waterPart and isInstalledContainerPart(waterPart) then return nil end
+		return gasPart
 	end
 
 	-- Dedicated tanker vehicles only: don't accidentally drain ordinary cars or boats.
