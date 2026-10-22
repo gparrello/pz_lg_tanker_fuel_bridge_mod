@@ -29,6 +29,7 @@ The rSemiTruck mod also has a manual alternative: right-click its W900 cistern a
 ## Notes and troubleshooting
 
 - The tanker must be loaded in the world, parked, and within range. Refilling requires fuel in the tanker; draining into it requires free tank capacity. Neither direction runs while the tanker/barrel's chunks are unloaded.
+- Each barrel selects one nearest eligible tanker per 10-minute tick. Empty tankers are skipped while refilling; full tankers are skipped while draining. If the selected tanker runs out of fuel or capacity, the next eligible tanker can be selected on the following tick. One tanker may serve multiple barrels, each at the configured per-barrel rate.
 - The barrel must be an LG Extended Plumbing collector, be plumbed into the building, and be empty or petrol-only. Empty water from it before enabling the bridge.
 - If the **Fuel direction** or **Enable fuel transfer** option is missing, check that the barrel is in the LG Extended Plumbing supply and contains only petrol (or is empty for tanker-to-barrel), and that the required mods are enabled.
 - For troubleshooting, enable **Log fuel-transfer checks** in the same Sandbox Options page. After a few in-game minutes, look in `console.txt` for `[LGTankerFuelBridge]` lines. The summary shows whether the tanker, tank, and barrel are being detected and how much fuel moved.

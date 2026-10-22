@@ -228,6 +228,27 @@ local function transferToTanker(vehicle, part, object)
 	return math.min(removed, tankAdded)
 end
 
+local function activeBarrelKey(object, square)
+	local index = object.getObjectIndex and object:getObjectIndex() or -1
+	return ("%d:%d:%d:%s"):format(square:getX(), square:getY(), square:getZ(), tostring(index))
+end
+
+local function tankerId(vehicle)
+	if vehicle.getId then
+		local ok, id = pcall(function() return vehicle:getId() end)
+		if ok and id ~= nil then return tostring(id) end
+	end
+	return tostring(vehicle)
+end
+
+local function candidateHasCapacity(tanker, drainDirection)
+	local amount = tanker.part:getContainerContentAmount()
+	if drainDirection then
+		return tanker.part:getContainerCapacity() - amount > Bridge.EPSILON
+	end
+	return amount > Bridge.EPSILON
+end
+
 local function tick()
 	if not isAuthority() or not LGEP or not LGEP.isWaterSource then return end
 	local cell = getCell()
@@ -242,10 +263,15 @@ local function tick()
 		barrelsEnabled = 0,
 		barrelsDraining = 0,
 		barrelsEligible = 0,
+		barrelsServed = 0,
 		litres = 0,
 	}
 	local range = Bridge.getRange()
+	local tankers, barrelsByKey = {}, {}
 
+	-- Build the currently loaded, parked tanker set once. Build 42's vehicle list
+	-- is a Java Set, and every source is considered independently of its fuel level:
+	-- an empty tanker can still receive fuel from a barrel.
 	forEachLoadedVehicle(cell, function(vehicle)
 		stats.vehicles = stats.vehicles + 1
 		local scriptName = scriptLeafName(vehicle)
@@ -257,13 +283,24 @@ local function tick()
 		local part = getFuelSourcePart(vehicle)
 		if not part then return end
 		stats.tanks = stats.tanks + 1
-		local available = part:getContainerContentAmount()
-		if available > Bridge.EPSILON then stats.fuelled = stats.fuelled + 1 end
+		if part:getContainerContentAmount() > Bridge.EPSILON then
+			stats.fuelled = stats.fuelled + 1
+		end
 		if not remainedParked(vehicle) then return end
 		stats.parked = stats.parked + 1
 
 		local square = centerSquare(vehicle, part)
 		if not square then return end
+		local tanker = {
+			vehicle = vehicle,
+			part = part,
+			square = square,
+			id = tankerId(vehicle),
+		}
+		tankers[#tankers + 1] = tanker
+
+		-- Find enabled barrels near any candidate tanker; selection happens below
+		-- per barrel, so overlapping tanker ranges do not multiply its transfer.
 		for dy = -range, range do
 			for dx = -range, range do
 				local nearby = cell:getGridSquare(square:getX() + dx, square:getY() + dy, square:getZ())
@@ -271,18 +308,15 @@ local function tick()
 					local objects = nearby:getObjects()
 					for i = 0, objects:size() - 1 do
 						local object = objects:get(i)
-						if Bridge.isAutoEnabled(object) then
-							stats.barrelsEnabled = stats.barrelsEnabled + 1
-							if Bridge.isEligibleBarrel(object) then
-								stats.barrelsEligible = stats.barrelsEligible + 1
+						if Bridge.isTransferEnabled(object) then
+							local key = activeBarrelKey(object, nearby)
+							if not barrelsByKey[key] then
+								barrelsByKey[key] = {
+									object = object,
+									square = nearby,
+									index = object.getObjectIndex and object:getObjectIndex() or -1,
+								}
 							end
-							stats.litres = stats.litres + transferToBarrel(vehicle, part, object)
-						elseif Bridge.isDrainEnabled(object) then
-							stats.barrelsDraining = stats.barrelsDraining + 1
-							if Bridge.isDrainableBarrel(object) then
-								stats.barrelsEligible = stats.barrelsEligible + 1
-							end
-							stats.litres = stats.litres + transferToTanker(vehicle, part, object)
 						end
 					end
 				end
@@ -290,11 +324,57 @@ local function tick()
 		end
 	end)
 
+	-- Stable tie-breaking means identical distances don't depend on HashSet order.
+	table.sort(tankers, function(a, b) return a.id < b.id end)
+	local barrels = {}
+	for _, barrel in pairs(barrelsByKey) do barrels[#barrels + 1] = barrel end
+	table.sort(barrels, function(a, b)
+		local as, bs = a.square, b.square
+		if as:getZ() ~= bs:getZ() then return as:getZ() < bs:getZ() end
+		if as:getY() ~= bs:getY() then return as:getY() < bs:getY() end
+		if as:getX() ~= bs:getX() then return as:getX() < bs:getX() end
+		return a.index < b.index
+	end)
+
+	for _, barrel in ipairs(barrels) do
+		local object, square = barrel.object, barrel.square
+		local drainDirection = Bridge.isDrainDirection(object)
+		local validBarrel
+		if drainDirection then validBarrel = Bridge.isDrainableBarrel(object)
+		else validBarrel = Bridge.isEligibleBarrel(object) end
+		if drainDirection then stats.barrelsDraining = stats.barrelsDraining + 1
+		else stats.barrelsEnabled = stats.barrelsEnabled + 1 end
+		if validBarrel then stats.barrelsEligible = stats.barrelsEligible + 1 end
+		if validBarrel then
+			local best, bestDistance = nil, nil
+			for _, tanker in ipairs(tankers) do
+				local sourceSquare = tanker.square
+				if sourceSquare:getZ() == square:getZ() then
+					local distance = math.max(math.abs(sourceSquare:getX() - square:getX()),
+						math.abs(sourceSquare:getY() - square:getY()))
+					if distance <= range and (not bestDistance or distance < bestDistance)
+						and candidateHasCapacity(tanker, drainDirection) then
+						best, bestDistance = tanker, distance
+					end
+				end
+			end
+
+			if best then
+				stats.barrelsServed = stats.barrelsServed + 1
+				if drainDirection then
+					stats.litres = stats.litres + transferToTanker(best.vehicle, best.part, object)
+				else
+					stats.litres = stats.litres + transferToBarrel(best.vehicle, best.part, object)
+				end
+			end
+		end
+	end
+
 	if debugging then
-		print(("[LGTankerFuelBridge] range=%d rate=%dL/10min loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d refillBarrels=%d drainingBarrels=%d eligibleBarrels=%d transferred=%.2fL")
+		print(("[LGTankerFuelBridge] range=%d rate=%dL/10min loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d refillBarrels=%d drainingBarrels=%d eligibleBarrels=%d servedBarrels=%d transferred=%.2fL")
 			:format(range, Bridge.getRate(), stats.vehicles, stats.tankers, stats.tanks, stats.fuelled,
 				stats.parked, stats.barrelsEnabled, stats.barrelsDraining,
-				stats.barrelsEligible, stats.litres))
+				stats.barrelsEligible, stats.barrelsServed, stats.litres))
 	end
 end
 
