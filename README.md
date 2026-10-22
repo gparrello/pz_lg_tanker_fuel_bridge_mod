@@ -10,7 +10,7 @@ An optional automation add-on for Project Zomboid Build 42.20. It connects fuel 
 
 1. **Set up a supported tanker.** Install its gasoline tank part and park the tanker near the base. It must remain stationary; the bridge checks its position over consecutive server intervals.
 2. **Prepare a stationary collector barrel.** Empty it, then use a pipe wrench and select **Plumb into house supply** on the collector. The bridge only offers auto-refill for a collector already included in LG Extended Plumbing's supply. The barrel must be empty or contain petrol only; other liquids are never replaced.
-3. **Enable auto-refill.** Right-click the barrel and choose **Enable cistern auto-refill**. The option changes to **Disable cistern auto-refill** when it is active.
+3. **Enable auto-refill.** Right-click the barrel, open its fluid-container submenu, and choose **Enable cistern auto-refill**. The option changes to **Disable cistern auto-refill** when it is active.
 4. **Plumb the generator into the building.** Right-click the generator and select **Plumb generator** from LG Extended Electricity. The generator must also be plugged in and usable.
 5. Keep the tanker within the configured range of the barrel on the same level. The range is adjustable from **1 to 20 tiles** under **Sandbox Options → LG Tanker Fuel Bridge → Tanker-to-barrel range** (default: 5). The server transfers up to **10 L of petrol every 10 in-game minutes**. After the tanker is first loaded or observed, it may take up to two 10-minute checks to confirm it is parked and begin transferring. The generator can then draw petrol from the building supply.
 

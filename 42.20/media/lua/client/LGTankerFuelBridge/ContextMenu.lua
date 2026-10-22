@@ -14,6 +14,26 @@ local function toggleAutoRefill(_target, object, playerNum, enabled)
 	})
 end
 
+local function barrelSubMenu(context, object)
+	if not context or not context.getSubMenu or type(fluidBlockEntries) ~= "function" then
+		return nil
+	end
+
+	-- LGEP pairs vanilla fluid-container submenu rows with their actual world
+	-- objects. Use object identity so identical barrels don't share one submenu.
+	local ok, entries = pcall(fluidBlockEntries, context)
+	if not ok or type(entries) ~= "table" then return nil end
+	for _, entry in ipairs(entries) do
+		if entry.object == object and entry.option and entry.option.subOption then
+			local menuOk, menu = pcall(function()
+				return context:getSubMenu(entry.option.subOption)
+			end)
+			if menuOk then return menu end
+		end
+	end
+	return nil
+end
+
 local function addOption(player, context, object)
 	if not Bridge.isEligibleBarrel(object) then return end
 
@@ -21,7 +41,8 @@ local function addOption(player, context, object)
 	local label = enabled
 		and getText("ContextMenu_LGTankerFuelBridge_Disable")
 		or getText("ContextMenu_LGTankerFuelBridge_Enable")
-	local option = context:addOption(label, object, toggleAutoRefill, object, player, not enabled)
+	local menu = barrelSubMenu(context, object) or context
+	local option = menu:addOption(label, object, toggleAutoRefill, object, player, not enabled)
 	local tooltip = ISWorldObjectContextMenu.addToolTip()
 	tooltip:setName(label)
 	tooltip.description = getText("ContextMenu_LGTankerFuelBridge_Tooltip")
