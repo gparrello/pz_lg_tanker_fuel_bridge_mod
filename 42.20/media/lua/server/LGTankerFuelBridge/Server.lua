@@ -263,6 +263,7 @@ local function tick()
 		barrelsEnabled = 0,
 		barrelsDraining = 0,
 		barrelsEligible = 0,
+		barrelsUnpowered = 0,
 		barrelsServed = 0,
 		litres = 0,
 	}
@@ -339,13 +340,15 @@ local function tick()
 	for _, barrel in ipairs(barrels) do
 		local object, square = barrel.object, barrel.square
 		local drainDirection = Bridge.isDrainDirection(object)
+		local powered = Bridge.isBarrelPowered(object)
 		local validBarrel
 		if drainDirection then validBarrel = Bridge.isDrainableBarrel(object)
 		else validBarrel = Bridge.isEligibleBarrel(object) end
 		if drainDirection then stats.barrelsDraining = stats.barrelsDraining + 1
 		else stats.barrelsEnabled = stats.barrelsEnabled + 1 end
 		if validBarrel then stats.barrelsEligible = stats.barrelsEligible + 1 end
-		if validBarrel then
+		if not powered then stats.barrelsUnpowered = stats.barrelsUnpowered + 1 end
+		if validBarrel and powered then
 			local best, bestDistance = nil, nil
 			for _, tanker in ipairs(tankers) do
 				local sourceSquare = tanker.square
@@ -371,10 +374,10 @@ local function tick()
 	end
 
 	if debugging then
-		print(("[LGTankerFuelBridge] range=%d rate=%dL/10min loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d refillBarrels=%d drainingBarrels=%d eligibleBarrels=%d servedBarrels=%d transferred=%.2fL")
+		print(("[LGTankerFuelBridge] range=%d rate=%dL/10min loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d refillBarrels=%d drainingBarrels=%d eligibleBarrels=%d unpoweredBarrels=%d servedBarrels=%d transferred=%.2fL")
 			:format(range, Bridge.getRate(), stats.vehicles, stats.tankers, stats.tanks, stats.fuelled,
 				stats.parked, stats.barrelsEnabled, stats.barrelsDraining,
-				stats.barrelsEligible, stats.barrelsServed, stats.litres))
+				stats.barrelsEligible, stats.barrelsUnpowered, stats.barrelsServed, stats.litres))
 	end
 end
 

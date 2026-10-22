@@ -9,7 +9,7 @@ An optional automation add-on for Project Zomboid Build 42.20. It transfers petr
 ## In-game setup
 
 1. **Set up a supported tanker.** Install its gasoline tank part and park the tanker near the base. It must remain stationary; the bridge checks its position over consecutive server intervals.
-2. **Prepare a stationary collector barrel.** Use a pipe wrench and select **Plumb into house supply** on the collector. The bridge only offers transfer modes for a collector already included in LG Extended Plumbing's supply. It must be empty or contain petrol only; other liquids are never replaced.
+2. **Prepare a stationary collector barrel.** Use a pipe wrench and select **Plumb into house supply** on the collector. The bridge only offers transfer modes for a collector already included in LG Extended Plumbing's supply. Its square must have electricity (from the grid or a generator). The barrel must be empty or contain petrol only; other liquids are never replaced.
 3. **Choose a transfer mode.** Right-click the barrel and open its fluid-container submenu:
    - Use **Fuel direction** to choose tanker → barrel or barrel → tanker.
    - Use **Enable fuel transfer** / **Disable fuel transfer** to start or pause the selected direction. Direction and on/off are independent controls.
@@ -28,7 +28,7 @@ The rSemiTruck mod also has a manual alternative: right-click its W900 cistern a
 
 ## Notes and troubleshooting
 
-- The tanker must be loaded in the world, parked, and within range. Refilling requires fuel in the tanker; draining into it requires free tank capacity. Neither direction runs while the tanker/barrel's chunks are unloaded.
+- The tanker must be loaded in the world, parked, and within range. The barrel's square must have electricity; the bridge uses LGEP's `square:haveElectricity()` check. Refilling requires fuel in the tanker; draining into it requires free tank capacity. Neither direction runs while the tanker/barrel's chunks are unloaded.
 - Each barrel selects one nearest eligible tanker per 10-minute tick. Empty tankers are skipped while refilling; full tankers are skipped while draining. If the selected tanker runs out of fuel or capacity, the next eligible tanker can be selected on the following tick. One tanker may serve multiple barrels, each at the configured per-barrel rate.
 - The barrel must be an LG Extended Plumbing collector, be plumbed into the building, and be empty or petrol-only. Empty water from it before enabling the bridge.
 - If the **Fuel direction** or **Enable fuel transfer** option is missing, check that the barrel is in the LG Extended Plumbing supply and contains only petrol (or is empty for tanker-to-barrel), and that the required mods are enabled.

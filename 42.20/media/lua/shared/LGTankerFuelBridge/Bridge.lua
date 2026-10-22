@@ -117,6 +117,17 @@ function Bridge.isTransferBarrel(object)
 	return isPetrolOnly(container, false)
 end
 
+--- The barrel acts as a powered transfer pump; use the same square power test
+--- as LG Extended Plumbing's pump-up behavior.
+function Bridge.isBarrelPowered(object)
+	if not object or not object.getSquare then return false end
+	local ok, powered = pcall(function()
+		local square = object:getSquare()
+		return square and square:haveElectricity() or false
+	end)
+	return ok and powered == true
+end
+
 local function writeMode(object, enabled, drainDirection)
 	local data = object:getModData()
 	data[Bridge.ENABLED_KEY] = enabled == true
@@ -129,6 +140,7 @@ end
 function Bridge.setEnabled(object, enabled)
 	local drainDirection = Bridge.isDrainDirection(object)
 	if enabled then
+		if not Bridge.isBarrelPowered(object) then return false end
 		if drainDirection and not Bridge.isDrainableBarrel(object) then return false end
 		if not drainDirection and not Bridge.isEligibleBarrel(object) then return false end
 	end
@@ -139,6 +151,7 @@ end
 
 function Bridge.setDrainDirection(object, drainDirection)
 	if not Bridge.isTransferBarrel(object) then return false end
+	if not Bridge.isBarrelPowered(object) then return false end
 	writeMode(object, Bridge.isTransferEnabled(object), drainDirection)
 	return true
 end

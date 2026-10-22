@@ -60,6 +60,7 @@ local function addOption(player, context, object)
 	local enabled = Bridge.isTransferEnabled(object)
 	local drainDirection = Bridge.isDrainDirection(object)
 	local transferBarrel = Bridge.isTransferBarrel(object)
+	local powered = Bridge.isBarrelPowered(object)
 	if not enabled and not transferBarrel then return end
 	local canEnable = drainDirection
 		and Bridge.isDrainableBarrel(object)
@@ -81,13 +82,13 @@ local function addOption(player, context, object)
 		and "ContextMenu_LGTankerFuelBridge_DirectionDrain"
 		or "ContextMenu_LGTankerFuelBridge_DirectionRefill",
 		"ContextMenu_LGTankerFuelBridge_DirectionTooltip",
-		"direction", not drainDirection, false)
+		"direction", not drainDirection, not powered)
 	addSetting(enabled
 		and "ContextMenu_LGTankerFuelBridge_DisableTransfer"
 		or "ContextMenu_LGTankerFuelBridge_EnableTransfer",
 		drainDirection and "ContextMenu_LGTankerFuelBridge_DrainTooltip"
 		or "ContextMenu_LGTankerFuelBridge_Tooltip",
-		"enabled", not enabled, not enabled and not canEnable)
+		"enabled", not enabled, not enabled and (not canEnable or not powered))
 end
 
 Events.OnFillWorldObjectContextMenu.Add(function(player, context, worldobjects, test)
