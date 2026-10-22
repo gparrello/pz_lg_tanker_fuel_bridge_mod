@@ -36,6 +36,6 @@ The rSemiTruck mod also has a manual alternative: right-click its W900 cistern a
 - Transfer is server-authoritative in multiplayer and conserves fuel: only petrol actually removed from one container is credited to the other. Refill stops when the tanker is empty or the barrel is full; draining stops when the barrel is empty or the tanker is full.
 - Ordinary cars' and boats' engine tanks are deliberately not supported as tanker sources.
 
-Required mods: `LGExtendedPlumbing` and `LGExtendedElectricity`. The tanker mods (`rSemiTruck`, `82oshkoshM911`, and `isoContainers`) are optional; their supported tanker trailers are recognized when those mods are installed and enabled.
+Required mod: `LGExtendedPlumbing`. `LGExtendedElectricity` is optional and is only needed if you also want to plumb a generator into the building to use the supplied fuel. The tanker mods (`rSemiTruck`, `82oshkoshM911`, and `isoContainers`) are optional; their supported tanker trailers are recognized when those mods are installed and enabled.
 
 The transfer range and rate are sandbox options: `RefillRange` and `LitresPerTenMinutes`.
