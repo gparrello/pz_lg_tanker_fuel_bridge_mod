@@ -1,5 +1,8 @@
 {
     "ContextMenu_LGTankerFuelBridge_Enable": "Enable cistern auto-refill",
     "ContextMenu_LGTankerFuelBridge_Disable": "Disable cistern auto-refill",
-    "ContextMenu_LGTankerFuelBridge_Tooltip": "When a supported fuel tanker is parked within the configured range, this LG Extended Plumbing barrel receives up to 10 L of petrol every 10 in-game minutes. It will not replace other liquids. Change the range in Sandbox Options."
+    "ContextMenu_LGTankerFuelBridge_StartDrain": "Transfer petrol to nearby tanker",
+    "ContextMenu_LGTankerFuelBridge_StopDrain": "Stop transferring petrol to tanker",
+    "ContextMenu_LGTankerFuelBridge_Tooltip": "When a supported fuel tanker is parked within the configured range, this LG Extended Plumbing barrel receives up to 10 L of petrol every 10 in-game minutes. It will not replace other liquids. Change the range in Sandbox Options.",
+    "ContextMenu_LGTankerFuelBridge_DrainTooltip": "Transfers up to 10 L of petrol from this barrel into a nearby parked supported tanker every 10 in-game minutes. The barrel must contain petrol only and the tanker needs free fuel-tank capacity."
 }

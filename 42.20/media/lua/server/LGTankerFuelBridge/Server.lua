@@ -29,15 +29,20 @@ local function setTargetAt(player, args)
 	local objects = square:getObjects()
 	for i = 0, objects:size() - 1 do
 		local object = objects:get(i)
-		if Bridge.isEligibleBarrel(object) then
+		if args.mode == "refill" and (Bridge.isEligibleBarrel(object)
+			or (not args.enabled and Bridge.isAutoEnabled(object))) then
 			Bridge.setEnabled(object, args.enabled == true)
+			return
+		elseif args.mode == "drain" and (Bridge.isDrainableBarrel(object)
+			or (not args.enabled and Bridge.isDrainEnabled(object))) then
+			Bridge.setDrainEnabled(object, args.enabled == true)
 			return
 		end
 	end
 end
 
 Events.OnClientCommand.Add(function(module, command, player, args)
-	if module ~= Bridge.MOD_ID or command ~= "setAutoRefill" then return end
+	if module ~= Bridge.MOD_ID or command ~= "setBarrelMode" then return end
 	setTargetAt(player, args)
 end)
 
@@ -153,10 +158,9 @@ local function transferToBarrel(vehicle, part, object)
 
 	local previousTotal = container:getAmount()
 	local previousPetrol = container:getSpecificFluidAmount(Fluid.Petrol)
-	local ok = pcall(function()
+	pcall(function()
 		object:addFluid(FluidType.Petrol, wanted)
 	end)
-	if not ok then return 0 end
 
 	local added = container:getSpecificFluidAmount(Fluid.Petrol) - previousPetrol
 	if added <= Bridge.EPSILON then return 0 end
@@ -173,6 +177,58 @@ local function transferToBarrel(vehicle, part, object)
 	return added
 end
 
+local function transferToTanker(vehicle, part, object)
+	if not Bridge.isDrainEnabled(object) or not Bridge.isDrainableBarrel(object) then return 0 end
+	if not object.useFluid then return 0 end
+
+	local container = object:getFluidContainer()
+	local barrelPetrolBefore = container:getSpecificFluidAmount(Fluid.Petrol)
+	local tankBefore = part:getContainerContentAmount()
+	local tankCapacity = part:getContainerCapacity()
+	local free = math.max(0, tankCapacity - tankBefore)
+	local wanted = math.min(Bridge.RATE_LITRES_PER_TEN_MINUTES, barrelPetrolBefore, free)
+	if wanted <= Bridge.EPSILON then return 0 end
+
+	-- Stage petrol into the vehicle part first, then remove only what the part
+	-- actually accepted from the barrel. The measured barrel delta is reconciled
+	-- back onto the tanker, so both containers finish with the same transfer.
+	part:setContainerContentAmount(math.min(tankCapacity, tankBefore + wanted))
+	local stagedAmount = part:getContainerContentAmount() - tankBefore
+	if stagedAmount <= Bridge.EPSILON then return 0 end
+
+	-- Measure the barrel even if a listener throws after useFluid has already
+	-- changed it; rolling back the tanker based only on the exception would lose
+	-- petrol in that case.
+	pcall(function() object:useFluid(stagedAmount) end)
+
+	local barrelPetrolAfter = container:getSpecificFluidAmount(Fluid.Petrol)
+	local removed = math.max(0, barrelPetrolBefore - barrelPetrolAfter)
+	if removed <= Bridge.EPSILON then
+		part:setContainerContentAmount(tankBefore)
+		vehicle:transmitPartModData(part)
+		return 0
+	end
+
+	part:setContainerContentAmount(math.min(tankCapacity, tankBefore + removed))
+	local tankAdded = math.max(0, part:getContainerContentAmount() - tankBefore)
+	vehicle:transmitPartModData(part)
+
+	-- If the vehicle part rounded its update down, return the unaccepted petrol
+	-- to the barrel rather than silently losing it.
+	if removed - tankAdded > Bridge.EPSILON then
+		pcall(function() object:addFluid(FluidType.Petrol, removed - tankAdded) end)
+		if object.transmitModData then object:transmitModData() end
+		local square = object:getSquare()
+		if square and square.transmitModdata then square:transmitModdata() end
+	end
+
+	local remaining = container:getSpecificFluidAmount(Fluid.Petrol)
+	if remaining <= Bridge.EPSILON and Bridge.isDrainEnabled(object) then
+		Bridge.setDrainEnabled(object, false)
+	end
+	return math.min(removed, tankAdded)
+end
+
 local function tick()
 	if not isAuthority() or not LGEP or not LGEP.isWaterSource then return end
 	local cell = getCell()
@@ -185,6 +241,7 @@ local function tick()
 		fuelled = 0,
 		parked = 0,
 		barrelsEnabled = 0,
+		barrelsDraining = 0,
 		barrelsEligible = 0,
 		litres = 0,
 	}
@@ -202,8 +259,7 @@ local function tick()
 		if not part then return end
 		stats.tanks = stats.tanks + 1
 		local available = part:getContainerContentAmount()
-		if available <= Bridge.EPSILON then return end
-		stats.fuelled = stats.fuelled + 1
+		if available > Bridge.EPSILON then stats.fuelled = stats.fuelled + 1 end
 		if not remainedParked(vehicle) then return end
 		stats.parked = stats.parked + 1
 
@@ -222,6 +278,12 @@ local function tick()
 								stats.barrelsEligible = stats.barrelsEligible + 1
 							end
 							stats.litres = stats.litres + transferToBarrel(vehicle, part, object)
+						elseif Bridge.isDrainEnabled(object) then
+							stats.barrelsDraining = stats.barrelsDraining + 1
+							if Bridge.isDrainableBarrel(object) then
+								stats.barrelsEligible = stats.barrelsEligible + 1
+							end
+							stats.litres = stats.litres + transferToTanker(vehicle, part, object)
 						end
 					end
 				end
@@ -230,9 +292,10 @@ local function tick()
 	end)
 
 	if debugging then
-		print(("[LGTankerFuelBridge] range=%d loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d enabledBarrelsInRange=%d eligibleBarrels=%d transferred=%.2fL")
+		print(("[LGTankerFuelBridge] range=%d loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d refillBarrels=%d drainingBarrels=%d eligibleBarrels=%d transferred=%.2fL")
 			:format(range, stats.vehicles, stats.tankers, stats.tanks, stats.fuelled,
-				stats.parked, stats.barrelsEnabled, stats.barrelsEligible, stats.litres))
+				stats.parked, stats.barrelsEnabled, stats.barrelsDraining,
+				stats.barrelsEligible, stats.litres))
 	end
 end
 
