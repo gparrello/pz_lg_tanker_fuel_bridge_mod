@@ -1,7 +1,8 @@
 require "LGTankerFuelBridge/Bridge"
 
 local Bridge = LGTankerFuelBridge
-local previousVehiclePositions = setmetatable({}, { __mode = "k" })
+local previousVehiclePositions = {}
+local PARKED_POSITION_TOLERANCE = 0.25
 
 local function isAuthority()
 	return not isClient()
@@ -108,34 +109,42 @@ end
 
 local function remainedParked(vehicle)
 	local x, y = vehicle:getX(), vehicle:getY()
-	local previous = previousVehiclePositions[vehicle]
-	previousVehiclePositions[vehicle] = { x = x, y = y }
+	-- Key by the persistent vehicle ID, not the Lua Java-object wrapper returned
+	-- from cell:getVehicles(); wrappers are not guaranteed to be identical each tick.
+	local key = nil
+	if vehicle.getId then
+		local ok, vehicleId = pcall(function() return vehicle:getId() end)
+		if ok and vehicleId ~= nil then key = tostring(vehicleId) end
+	end
+	key = key or tostring(vehicle)
+	local previous = previousVehiclePositions[key]
+	previousVehiclePositions[key] = { x = x, y = y }
 	-- A trailer can report zero speed while being towed. Compare its actual position
 	-- across server ticks instead, and require two consecutive stationary samples.
 	return previous ~= nil
-		and math.abs(previous.x - x) <= 0.05
-		and math.abs(previous.y - y) <= 0.05
+		and math.abs(previous.x - x) <= PARKED_POSITION_TOLERANCE
+		and math.abs(previous.y - y) <= PARKED_POSITION_TOLERANCE
 end
 
 local function transferToBarrel(vehicle, part, object)
-	if not Bridge.isAutoEnabled(object) or not Bridge.isEligibleBarrel(object) then return end
-	if not object.addFluid then return end
+	if not Bridge.isAutoEnabled(object) or not Bridge.isEligibleBarrel(object) then return 0 end
+	if not object.addFluid then return 0 end
 
 	local container = object:getFluidContainer()
 	local free = container:getFreeCapacity()
 	local available = part:getContainerContentAmount()
 	local wanted = math.min(Bridge.RATE_LITRES_PER_TEN_MINUTES, free, available)
-	if wanted <= Bridge.EPSILON then return end
+	if wanted <= Bridge.EPSILON then return 0 end
 
 	local previousTotal = container:getAmount()
 	local previousPetrol = container:getSpecificFluidAmount(Fluid.Petrol)
 	local ok = pcall(function()
 		object:addFluid(FluidType.Petrol, wanted)
 	end)
-	if not ok then return end
+	if not ok then return 0 end
 
 	local added = container:getSpecificFluidAmount(Fluid.Petrol) - previousPetrol
-	if added <= Bridge.EPSILON then return end
+	if added <= Bridge.EPSILON then return 0 end
 
 	-- Charge the source only for the amount the destination actually accepted.
 	part:setContainerContentAmount(math.max(0, available - added))
@@ -146,21 +155,45 @@ local function transferToBarrel(vehicle, part, object)
 	if square and square.transmitModdata then square:transmitModdata() end
 	if object.sync then pcall(function() object:sync() end) end
 	if triggerEvent then triggerEvent("OnWaterAmountChange", object, previousTotal) end
+	return added
 end
 
 local function tick()
 	if not isAuthority() or not LGEP or not LGEP.isWaterSource then return end
 	local cell = getCell()
 	if not cell then return end
+	local debugging = Bridge.isDebugEnabled()
+	local stats = {
+		vehicles = 0,
+		tankers = 0,
+		tanks = 0,
+		fuelled = 0,
+		parked = 0,
+		barrelsEnabled = 0,
+		barrelsEligible = 0,
+		litres = 0,
+	}
+	local range = Bridge.getRange()
 
 	forEachLoadedVehicle(cell, function(vehicle)
+		stats.vehicles = stats.vehicles + 1
+		local scriptName = scriptLeafName(vehicle)
+		if scriptName == "SemiTrailerCistern" or scriptName == "TrailerM967tanker"
+			or scriptName == "TrailerISOcontainerM3tanker" then
+			stats.tankers = stats.tankers + 1
+		end
+
 		local part = getFuelSourcePart(vehicle)
-		if not part or part:getContainerContentAmount() <= Bridge.EPSILON then return end
+		if not part then return end
+		stats.tanks = stats.tanks + 1
+		local available = part:getContainerContentAmount()
+		if available <= Bridge.EPSILON then return end
+		stats.fuelled = stats.fuelled + 1
 		if not remainedParked(vehicle) then return end
+		stats.parked = stats.parked + 1
 
 		local square = centerSquare(vehicle, part)
 		if not square then return end
-		local range = Bridge.getRange()
 		for dy = -range, range do
 			for dx = -range, range do
 				local nearby = cell:getGridSquare(square:getX() + dx, square:getY() + dy, square:getZ())
@@ -169,13 +202,23 @@ local function tick()
 					for i = 0, objects:size() - 1 do
 						local object = objects:get(i)
 						if Bridge.isAutoEnabled(object) then
-							transferToBarrel(vehicle, part, object)
+							stats.barrelsEnabled = stats.barrelsEnabled + 1
+							if Bridge.isEligibleBarrel(object) then
+								stats.barrelsEligible = stats.barrelsEligible + 1
+							end
+							stats.litres = stats.litres + transferToBarrel(vehicle, part, object)
 						end
 					end
 				end
 			end
 		end
 	end)
+
+	if debugging then
+		print(("[LGTankerFuelBridge] range=%d loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d enabledBarrelsInRange=%d eligibleBarrels=%d transferred=%.2fL")
+			:format(range, stats.vehicles, stats.tankers, stats.tanks, stats.fuelled,
+				stats.parked, stats.barrelsEnabled, stats.barrelsEligible, stats.litres))
+	end
 end
 
 Events.EveryTenMinutes.Add(tick)

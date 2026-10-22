@@ -14,6 +14,11 @@ function Bridge.getRange()
 	return math.max(1, math.floor(range))
 end
 
+function Bridge.isDebugEnabled()
+	local options = SandboxVars and SandboxVars.LGTankerFuelBridge
+	return options and options.Debug == true
+end
+
 function Bridge.isAutoEnabled(object)
 	if not object or not object.hasModData or not object:hasModData() then
 		return false

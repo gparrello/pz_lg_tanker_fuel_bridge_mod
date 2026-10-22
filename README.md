@@ -21,6 +21,7 @@ The rSemiTruck mod also has a manual alternative: right-click its W900 cistern a
 - The tanker must be loaded in the world, parked, have fuel in its supported tank, and be within range. Auto-refill does not run while the tanker/barrel's chunks are unloaded.
 - The barrel must be an LG Extended Plumbing collector, be plumbed into the building, and be empty or petrol-only. Empty water from it before enabling the bridge.
 - If **Enable cistern auto-refill** is missing, check that the barrel is in the LG Extended Plumbing supply and accepts petrol, and that all required mods are enabled.
+- For troubleshooting, enable **Log auto-refill checks** in the same Sandbox Options page. After a few in-game minutes, look in `console.txt` for `[LGTankerFuelBridge]` lines. The summary shows whether the tanker, tank, and barrel are being detected and how much fuel moved.
 - Transfer is server-authoritative in multiplayer. It only moves fuel that is actually in the tanker and stops when the tanker is empty or the barrel is full.
 - Ordinary cars' and boats' engine tanks are deliberately not supported as tanker sources.
 
