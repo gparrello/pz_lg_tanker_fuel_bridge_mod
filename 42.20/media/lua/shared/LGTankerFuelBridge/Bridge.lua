@@ -16,7 +16,7 @@ Bridge.EPSILON = 0.01
 function Bridge.getRange()
 	local options = SandboxVars and SandboxVars.LGTankerFuelBridge
 	local range = options and tonumber(options.RefillRange) or Bridge.DEFAULT_RANGE
-	return math.max(1, math.floor(range))
+	return math.max(1, math.min(100, math.floor(range)))
 end
 
 function Bridge.getRate()

@@ -15,7 +15,7 @@ An optional automation add-on for Project Zomboid Build 42.20. It transfers petr
    - Use **Enable fuel transfer** / **Disable fuel transfer** to start or pause the selected direction. Direction and on/off are independent controls.
    - Tanker → barrel requires an empty or petrol-only barrel. Barrel → tanker requires petrol in the barrel and free capacity in the tanker.
 4. **Plumb the generator into the building.** Right-click the generator and select **Plumb generator** from LG Extended Electricity. The generator must also be plugged in and usable.
-5. Keep the tanker within the configured range of the barrel on the same level. **Barrel/tanker transfer range** is adjustable from **1 to 20 tiles** (default: 5), and **Fuel transferred per 10 minutes** from **1 to 1,000 L** (default: 10). Both settings are under **Sandbox Options → LG Tanker Fuel Bridge**. After the tanker is first loaded or observed, it may take up to two 10-minute checks to confirm it is parked and begin transferring. The generator can then draw petrol from the building supply.
+5. Keep the tanker within the configured range of the barrel on the same level. **Barrel/tanker transfer range** is adjustable from **1 to 100 tiles** (default: 5), and **Fuel transferred per 10 minutes** from **1 to 1,000 L** (default: 10). Both settings are under **Sandbox Options → LG Tanker Fuel Bridge**. After the tanker is first loaded or observed, it may take up to two 10-minute checks to confirm it is parked and begin transferring. The generator can then draw petrol from the building supply.
 
 The rSemiTruck mod also has a manual alternative: right-click its W900 cistern and choose **Drain Cistern** to transfer fuel into a nearby placed fluid container.
 
@@ -35,6 +35,7 @@ The rSemiTruck mod also has a manual alternative: right-click its W900 cistern a
 - For troubleshooting, enable **Log fuel-transfer checks** in the same Sandbox Options page. After a few in-game minutes, look in `console.txt` for `[LGTankerFuelBridge]` lines. The summary shows whether the tanker, tank, and barrel are being detected and how much fuel moved.
 - Transfer is server-authoritative in multiplayer and conserves fuel: only petrol actually removed from one container is credited to the other. Refill stops when the tanker is empty or the barrel is full; draining stops when the barrel is empty or the tanker is full.
 - Ordinary cars' and boats' engine tanks are deliberately not supported as tanker sources.
+- Large ranges increase the number of world tiles checked during each 10-minute transfer pass. Keep the range near the minimum you need, especially with many tankers/barrels enabled.
 
 Required mod: `LGExtendedPlumbing`. `LGExtendedElectricity` is optional and is only needed if you also want to plumb a generator into the building to use the supplied fuel. The tanker mods (`rSemiTruck`, `82oshkoshM911`, and `isoContainers`) are optional; their supported tanker trailers are recognized when those mods are installed and enabled.
 

@@ -2,7 +2,7 @@ VERSION = 1,
 
 option LGTankerFuelBridge.RefillRange
 {
-	type = integer, min = 1, max = 20, default = 5,
+	type = integer, min = 1, max = 100, default = 5,
 	page = LGTankerFuelBridge, translation = LGTankerFuelBridge_RefillRange,
 }
 
