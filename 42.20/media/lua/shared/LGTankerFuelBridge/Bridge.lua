@@ -3,8 +3,12 @@ LGTankerFuelBridge = LGTankerFuelBridge or {}
 local Bridge = LGTankerFuelBridge
 
 Bridge.MOD_ID = "LGTankerFuelBridge"
+-- AUTO_KEY and DRAIN_KEY are retained for upgrading barrel markers from older
+-- builds. New saves use separate enabled/direction settings below.
 Bridge.AUTO_KEY = "LGTankerFuelBridgeAuto"
 Bridge.DRAIN_KEY = "LGTankerFuelBridgeDrain"
+Bridge.ENABLED_KEY = "LGTankerFuelBridgeEnabled"
+Bridge.DIRECTION_KEY = "LGTankerFuelBridgeDrainDirection"
 Bridge.RATE_LITRES_PER_TEN_MINUTES = 10
 Bridge.DEFAULT_RANGE = 5
 Bridge.EPSILON = 0.01
@@ -20,18 +24,39 @@ function Bridge.isDebugEnabled()
 	return options and options.Debug == true
 end
 
-function Bridge.isAutoEnabled(object)
+local function dataOf(object)
 	if not object or not object.hasModData or not object:hasModData() then
-		return false
+		return nil
 	end
-	return object:getModData()[Bridge.AUTO_KEY] == true
+	return object:getModData()
+end
+
+function Bridge.isDrainDirection(object)
+	local data = dataOf(object)
+	if not data then return false end
+	if data[Bridge.DIRECTION_KEY] ~= nil then
+		return data[Bridge.DIRECTION_KEY] == true
+	end
+	-- Old drain mode implied both enabled and tanker-bound direction.
+	return data[Bridge.DRAIN_KEY] == true
+end
+
+function Bridge.isTransferEnabled(object)
+	local data = dataOf(object)
+	if not data then return false end
+	if data[Bridge.ENABLED_KEY] ~= nil then
+		return data[Bridge.ENABLED_KEY] == true
+	end
+	-- Old keys stored the active direction rather than an independent switch.
+	return data[Bridge.AUTO_KEY] == true or data[Bridge.DRAIN_KEY] == true
+end
+
+function Bridge.isAutoEnabled(object)
+	return Bridge.isTransferEnabled(object) and not Bridge.isDrainDirection(object)
 end
 
 function Bridge.isDrainEnabled(object)
-	if not object or not object.hasModData or not object:hasModData() then
-		return false
-	end
-	return object:getModData()[Bridge.DRAIN_KEY] == true
+	return Bridge.isTransferEnabled(object) and Bridge.isDrainDirection(object)
 end
 
 function Bridge.collectorContainer(object)
@@ -80,25 +105,34 @@ function Bridge.isDrainableBarrel(object)
 	return isPetrolOnly(container, true)
 end
 
-function Bridge.setEnabled(object, enabled)
-	if enabled and not Bridge.isEligibleBarrel(object) then return false end
-	if not enabled and not Bridge.isAutoEnabled(object) then return false end
+function Bridge.isTransferBarrel(object)
+	local container = Bridge.collectorContainer(object)
+	return isPetrolOnly(container, false)
+end
 
+local function writeMode(object, enabled, drainDirection)
 	local data = object:getModData()
-	data[Bridge.AUTO_KEY] = enabled and true or nil
-	if enabled then data[Bridge.DRAIN_KEY] = nil end
+	data[Bridge.ENABLED_KEY] = enabled == true
+	data[Bridge.DIRECTION_KEY] = drainDirection == true
+	data[Bridge.AUTO_KEY] = nil
+	data[Bridge.DRAIN_KEY] = nil
 	if object.transmitModData then object:transmitModData() end
+end
+
+function Bridge.setEnabled(object, enabled)
+	local drainDirection = Bridge.isDrainDirection(object)
+	if enabled then
+		if drainDirection and not Bridge.isDrainableBarrel(object) then return false end
+		if not drainDirection and not Bridge.isEligibleBarrel(object) then return false end
+	end
+	if not enabled and not Bridge.isTransferEnabled(object) then return false end
+	writeMode(object, enabled, drainDirection)
 	return true
 end
 
-function Bridge.setDrainEnabled(object, enabled)
-	if enabled and not Bridge.isDrainableBarrel(object) then return false end
-	if not enabled and not Bridge.isDrainEnabled(object) then return false end
-
-	local data = object:getModData()
-	data[Bridge.DRAIN_KEY] = enabled and true or nil
-	if enabled then data[Bridge.AUTO_KEY] = nil end
-	if object.transmitModData then object:transmitModData() end
+function Bridge.setDrainDirection(object, drainDirection)
+	if not Bridge.isTransferBarrel(object) then return false end
+	writeMode(object, Bridge.isTransferEnabled(object), drainDirection)
 	return true
 end
 

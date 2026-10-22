@@ -2,15 +2,15 @@ require "LGTankerFuelBridge/Bridge"
 
 local Bridge = LGTankerFuelBridge
 
-local function setBarrelMode(_target, object, playerNum, mode, enabled)
+local function setBarrelSetting(_target, object, playerNum, setting, value)
 	if not object or not object:getSquare() then return end
 	local square = object:getSquare()
-	sendClientCommand(Bridge.MOD_ID, "setBarrelMode", {
+	sendClientCommand(Bridge.MOD_ID, "setBarrelSetting", {
 		x = square:getX(),
 		y = square:getY(),
 		z = square:getZ(),
-		enabled = enabled == true,
-		mode = mode,
+		setting = setting,
+		value = value == true,
 		playerNum = playerNum,
 	})
 end
@@ -57,38 +57,37 @@ local function barrelSubMenu(context, object)
 end
 
 local function addOption(player, context, object)
-	local refilling = Bridge.isAutoEnabled(object)
-	local draining = Bridge.isDrainEnabled(object)
-	local canRefill = not refilling and not draining and Bridge.isEligibleBarrel(object)
-	local canDrain = not refilling and not draining and Bridge.isDrainableBarrel(object)
-	if not refilling and not draining and not canRefill and not canDrain then return end
+	local enabled = Bridge.isTransferEnabled(object)
+	local drainDirection = Bridge.isDrainDirection(object)
+	local transferBarrel = Bridge.isTransferBarrel(object)
+	if not enabled and not transferBarrel then return end
+	local canEnable = drainDirection
+		and Bridge.isDrainableBarrel(object)
+		or (not drainDirection and Bridge.isEligibleBarrel(object))
 
 	local menu = barrelSubMenu(context, object) or context
-	local function addModeOption(labelKey, tooltipKey, mode, enabled)
+	local function addSetting(labelKey, tooltipKey, setting, value, unavailable)
 		local label = getText(labelKey)
-		local option = menu:addOption(label, object, setBarrelMode, object, player, mode, enabled)
+		local option = menu:addOption(label, object, setBarrelSetting,
+			object, player, setting, value)
+		option.notAvailable = unavailable == true
 		local tooltip = ISWorldObjectContextMenu.addToolTip()
 		tooltip:setName(label)
 		tooltip.description = getText(tooltipKey)
 		option.toolTip = tooltip
 	end
 
-	if refilling then
-		addModeOption("ContextMenu_LGTankerFuelBridge_Disable",
-			"ContextMenu_LGTankerFuelBridge_Tooltip", "refill", false)
-	elseif draining then
-		addModeOption("ContextMenu_LGTankerFuelBridge_StopDrain",
-			"ContextMenu_LGTankerFuelBridge_DrainTooltip", "drain", false)
-	else
-		if canRefill then
-			addModeOption("ContextMenu_LGTankerFuelBridge_Enable",
-				"ContextMenu_LGTankerFuelBridge_Tooltip", "refill", true)
-		end
-		if canDrain then
-			addModeOption("ContextMenu_LGTankerFuelBridge_StartDrain",
-				"ContextMenu_LGTankerFuelBridge_DrainTooltip", "drain", true)
-		end
-	end
+	addSetting(drainDirection
+		and "ContextMenu_LGTankerFuelBridge_DirectionDrain"
+		or "ContextMenu_LGTankerFuelBridge_DirectionRefill",
+		"ContextMenu_LGTankerFuelBridge_DirectionTooltip",
+		"direction", not drainDirection, false)
+	addSetting(enabled
+		and "ContextMenu_LGTankerFuelBridge_DisableTransfer"
+		or "ContextMenu_LGTankerFuelBridge_EnableTransfer",
+		drainDirection and "ContextMenu_LGTankerFuelBridge_DrainTooltip"
+		or "ContextMenu_LGTankerFuelBridge_Tooltip",
+		"enabled", not enabled, not enabled and not canEnable)
 end
 
 Events.OnFillWorldObjectContextMenu.Add(function(player, context, worldobjects, test)

@@ -29,20 +29,19 @@ local function setTargetAt(player, args)
 	local objects = square:getObjects()
 	for i = 0, objects:size() - 1 do
 		local object = objects:get(i)
-		if args.mode == "refill" and (Bridge.isEligibleBarrel(object)
-			or (not args.enabled and Bridge.isAutoEnabled(object))) then
-			Bridge.setEnabled(object, args.enabled == true)
+		if args.setting == "enabled" and (Bridge.isTransferBarrel(object)
+			or (args.value ~= true and Bridge.isTransferEnabled(object))) then
+			Bridge.setEnabled(object, args.value == true)
 			return
-		elseif args.mode == "drain" and (Bridge.isDrainableBarrel(object)
-			or (not args.enabled and Bridge.isDrainEnabled(object))) then
-			Bridge.setDrainEnabled(object, args.enabled == true)
+		elseif args.setting == "direction" and Bridge.isTransferBarrel(object) then
+			Bridge.setDrainDirection(object, args.value == true)
 			return
 		end
 	end
 end
 
 Events.OnClientCommand.Add(function(module, command, player, args)
-	if module ~= Bridge.MOD_ID or command ~= "setBarrelMode" then return end
+	if module ~= Bridge.MOD_ID or command ~= "setBarrelSetting" then return end
 	setTargetAt(player, args)
 end)
 
@@ -224,7 +223,7 @@ local function transferToTanker(vehicle, part, object)
 
 	local remaining = container:getSpecificFluidAmount(Fluid.Petrol)
 	if remaining <= Bridge.EPSILON and Bridge.isDrainEnabled(object) then
-		Bridge.setDrainEnabled(object, false)
+		Bridge.setEnabled(object, false)
 	end
 	return math.min(removed, tankAdded)
 end
