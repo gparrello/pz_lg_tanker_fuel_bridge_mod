@@ -2,6 +2,8 @@
     "Sandbox_LGTankerFuelBridge": "LG Tanker Fuel Bridge",
     "Sandbox_LGTankerFuelBridge_RefillRange": "Barrel/tanker transfer range",
     "Sandbox_LGTankerFuelBridge_RefillRange_tooltip": "Maximum tile distance between an enabled plumbing barrel and a supported tanker. Default: 5 tiles.",
+    "Sandbox_LGTankerFuelBridge_LitresPerTenMinutes": "Fuel transferred per 10 minutes",
+    "Sandbox_LGTankerFuelBridge_LitresPerTenMinutes_tooltip": "Maximum litres transferred in either direction during each 10 in-game minute interval. Range: 1–1000 L. Default: 10 L.",
     "Sandbox_LGTankerFuelBridge_Debug": "Log fuel-transfer checks",
     "Sandbox_LGTankerFuelBridge_Debug_tooltip": "Write a diagnostic summary every 10 in-game minutes, including detected tankers, eligible barrels, and petrol transferred."
 }

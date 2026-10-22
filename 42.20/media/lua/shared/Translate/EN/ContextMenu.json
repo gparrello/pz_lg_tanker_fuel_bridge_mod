@@ -4,6 +4,6 @@
     "ContextMenu_LGTankerFuelBridge_DirectionTooltip": "Click to swap the transfer direction. This can be changed while transfer is on.",
     "ContextMenu_LGTankerFuelBridge_EnableTransfer": "Enable fuel transfer",
     "ContextMenu_LGTankerFuelBridge_DisableTransfer": "Disable fuel transfer",
-    "ContextMenu_LGTankerFuelBridge_Tooltip": "When a supported fuel tanker is parked within the configured range, this LG Extended Plumbing barrel receives up to 10 L of petrol every 10 in-game minutes. It will not replace other liquids. Change the range in Sandbox Options.",
-    "ContextMenu_LGTankerFuelBridge_DrainTooltip": "Transfers up to 10 L of petrol from this barrel into a nearby parked supported tanker every 10 in-game minutes. The barrel must contain petrol only and the tanker needs free fuel-tank capacity."
+    "ContextMenu_LGTankerFuelBridge_Tooltip": "When a supported fuel tanker is parked within the configured range, this LG Extended Plumbing barrel receives up to the configured amount of petrol every 10 in-game minutes. It will not replace other liquids. Change the range and rate in Sandbox Options.",
+    "ContextMenu_LGTankerFuelBridge_DrainTooltip": "Transfers up to the configured amount of petrol from this barrel into a nearby parked supported tanker every 10 in-game minutes. The barrel must contain petrol only and the tanker needs free fuel-tank capacity."
 }

@@ -6,6 +6,12 @@ option LGTankerFuelBridge.RefillRange
 	page = LGTankerFuelBridge, translation = LGTankerFuelBridge_RefillRange,
 }
 
+option LGTankerFuelBridge.LitresPerTenMinutes
+{
+	type = integer, min = 1, max = 1000, default = 10,
+	page = LGTankerFuelBridge, translation = LGTankerFuelBridge_LitresPerTenMinutes,
+}
+
 option LGTankerFuelBridge.Debug
 {
 	type = boolean, default = false,

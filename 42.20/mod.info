@@ -1,5 +1,5 @@
 name=LG Tanker Fuel Bridge
 id=LGTankerFuelBridge
-description=Transfers petrol both ways between opted-in plumbing barrels and supported tanker trailers. Configure the range in Sandbox Options. Requires LG Extended Plumbing and LG Extended Electricity.
+description=Transfers petrol both ways between opted-in plumbing barrels and supported tanker trailers. Configure range and rate in Sandbox Options. Requires LG Extended Plumbing and LG Extended Electricity.
 versionMin=42.20.0
 require=\LGExtendedPlumbing,\LGExtendedElectricity

@@ -15,7 +15,7 @@ An optional automation add-on for Project Zomboid Build 42.20. It transfers petr
    - Use **Enable fuel transfer** / **Disable fuel transfer** to start or pause the selected direction. Direction and on/off are independent controls.
    - Tanker → barrel requires an empty or petrol-only barrel. Barrel → tanker requires petrol in the barrel and free capacity in the tanker.
 4. **Plumb the generator into the building.** Right-click the generator and select **Plumb generator** from LG Extended Electricity. The generator must also be plugged in and usable.
-5. Keep the tanker within the configured range of the barrel on the same level. The range is adjustable from **1 to 20 tiles** under **Sandbox Options → LG Tanker Fuel Bridge → Barrel/tanker transfer range** (default: 5). The server transfers up to **10 L of petrol every 10 in-game minutes**. After the tanker is first loaded or observed, it may take up to two 10-minute checks to confirm it is parked and begin transferring. The generator can then draw petrol from the building supply.
+5. Keep the tanker within the configured range of the barrel on the same level. **Barrel/tanker transfer range** is adjustable from **1 to 20 tiles** (default: 5), and **Fuel transferred per 10 minutes** from **1 to 1,000 L** (default: 10). Both settings are under **Sandbox Options → LG Tanker Fuel Bridge**. After the tanker is first loaded or observed, it may take up to two 10-minute checks to confirm it is parked and begin transferring. The generator can then draw petrol from the building supply.
 
 The rSemiTruck mod also has a manual alternative: right-click its W900 cistern and choose **Drain Cistern** to transfer fuel into a nearby placed fluid container.
 
@@ -37,4 +37,4 @@ The rSemiTruck mod also has a manual alternative: right-click its W900 cistern a
 
 Required mods: `LGExtendedPlumbing` and `LGExtendedElectricity`. The tanker mods (`rSemiTruck`, `82oshkoshM911`, and `isoContainers`) are optional; their supported tanker trailers are recognized when those mods are installed and enabled.
 
-The transfer rate is set in `42.20/media/lua/shared/LGTankerFuelBridge/Bridge.lua` (`RATE_LITRES_PER_TEN_MINUTES`). The range is the `RefillRange` sandbox option.
+The transfer range and rate are sandbox options: `RefillRange` and `LitresPerTenMinutes`.

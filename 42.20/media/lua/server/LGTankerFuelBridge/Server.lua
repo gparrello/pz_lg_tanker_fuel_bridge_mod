@@ -152,7 +152,7 @@ local function transferToBarrel(vehicle, part, object)
 	local container = object:getFluidContainer()
 	local free = container:getFreeCapacity()
 	local available = part:getContainerContentAmount()
-	local wanted = math.min(Bridge.RATE_LITRES_PER_TEN_MINUTES, free, available)
+	local wanted = math.min(Bridge.getRate(), free, available)
 	if wanted <= Bridge.EPSILON then return 0 end
 
 	local previousTotal = container:getAmount()
@@ -185,7 +185,7 @@ local function transferToTanker(vehicle, part, object)
 	local tankBefore = part:getContainerContentAmount()
 	local tankCapacity = part:getContainerCapacity()
 	local free = math.max(0, tankCapacity - tankBefore)
-	local wanted = math.min(Bridge.RATE_LITRES_PER_TEN_MINUTES, barrelPetrolBefore, free)
+	local wanted = math.min(Bridge.getRate(), barrelPetrolBefore, free)
 	if wanted <= Bridge.EPSILON then return 0 end
 
 	-- Stage petrol into the vehicle part first, then remove only what the part
@@ -291,8 +291,8 @@ local function tick()
 	end)
 
 	if debugging then
-		print(("[LGTankerFuelBridge] range=%d loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d refillBarrels=%d drainingBarrels=%d eligibleBarrels=%d transferred=%.2fL")
-			:format(range, stats.vehicles, stats.tankers, stats.tanks, stats.fuelled,
+		print(("[LGTankerFuelBridge] range=%d rate=%dL/10min loadedVehicles=%d supportedTankers=%d validTanks=%d fueledTankers=%d parkedTankers=%d refillBarrels=%d drainingBarrels=%d eligibleBarrels=%d transferred=%.2fL")
+			:format(range, Bridge.getRate(), stats.vehicles, stats.tankers, stats.tanks, stats.fuelled,
 				stats.parked, stats.barrelsEnabled, stats.barrelsDraining,
 				stats.barrelsEligible, stats.litres))
 	end

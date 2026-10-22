@@ -9,7 +9,7 @@ Bridge.AUTO_KEY = "LGTankerFuelBridgeAuto"
 Bridge.DRAIN_KEY = "LGTankerFuelBridgeDrain"
 Bridge.ENABLED_KEY = "LGTankerFuelBridgeEnabled"
 Bridge.DIRECTION_KEY = "LGTankerFuelBridgeDrainDirection"
-Bridge.RATE_LITRES_PER_TEN_MINUTES = 10
+Bridge.DEFAULT_RATE_LITRES_PER_TEN_MINUTES = 10
 Bridge.DEFAULT_RANGE = 5
 Bridge.EPSILON = 0.01
 
@@ -17,6 +17,13 @@ function Bridge.getRange()
 	local options = SandboxVars and SandboxVars.LGTankerFuelBridge
 	local range = options and tonumber(options.RefillRange) or Bridge.DEFAULT_RANGE
 	return math.max(1, math.floor(range))
+end
+
+function Bridge.getRate()
+	local options = SandboxVars and SandboxVars.LGTankerFuelBridge
+	local rate = options and tonumber(options.LitresPerTenMinutes)
+		or Bridge.DEFAULT_RATE_LITRES_PER_TEN_MINUTES
+	return math.max(1, math.floor(rate))
 end
 
 function Bridge.isDebugEnabled()
