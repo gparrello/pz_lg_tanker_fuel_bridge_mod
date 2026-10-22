@@ -44,10 +44,25 @@ end)
 local function forEachLoadedVehicle(cell, callback)
 	if not cell or not cell.getVehicles then return end
 	local vehicles = cell:getVehicles()
-	if not vehicles or not vehicles.size or not vehicles.get then return end
-	for i = 0, vehicles:size() - 1 do
-		local vehicle = vehicles:get(i)
-		if vehicle then callback(vehicle) end
+	if not vehicles then return end
+
+	-- Build 42 returns a Java Set here (no get(index)); retain the indexed path
+	-- for compatibility with builds/contexts that expose a list.
+	if type(vehicles.size) == "function" and type(vehicles.get) == "function" then
+		for i = 0, vehicles:size() - 1 do
+			local vehicle = vehicles:get(i)
+			if vehicle then callback(vehicle) end
+		end
+		return
+	end
+
+	if type(vehicles.iterator) == "function" then
+		local ok, iterator = pcall(function() return vehicles:iterator() end)
+		if not ok or not iterator then return end
+		while iterator:hasNext() do
+			local vehicle = iterator:next()
+			if vehicle then callback(vehicle) end
+		end
 	end
 end
 
