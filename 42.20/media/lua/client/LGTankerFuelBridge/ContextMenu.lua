@@ -14,21 +14,42 @@ local function toggleAutoRefill(_target, object, playerNum, enabled)
 	})
 end
 
+local function fluidMenuName(object)
+	if not object then return nil end
+	local name = ISWorldObjectContextMenu and ISWorldObjectContextMenu.getMoveableDisplayName
+		and ISWorldObjectContextMenu.getMoveableDisplayName(object)
+	if name then return name end
+	return object.getFluidUiName and object:getFluidUiName() or nil
+end
+
 local function barrelSubMenu(context, object)
-	if not context or not context.getSubMenu or type(fluidBlockEntries) ~= "function" then
+	if not context or not context.getSubMenu or type(context.options) ~= "table" then
 		return nil
 	end
+	local fetch = ISWorldObjectContextMenu and ISWorldObjectContextMenu.fetchVars
+	local containers = fetch and fetch.fluidcontainer
+	if type(containers) ~= "table" then return nil end
 
-	-- LGEP pairs vanilla fluid-container submenu rows with their actual world
-	-- objects. Use object identity so identical barrels don't share one submenu.
-	local ok, entries = pcall(fluidBlockEntries, context)
-	if not ok or type(entries) ~= "table" then return nil end
-	for _, entry in ipairs(entries) do
-		if entry.object == object and entry.option and entry.option.subOption then
-			local menuOk, menu = pcall(function()
-				return context:getSubMenu(entry.option.subOption)
-			end)
-			if menuOk then return menu end
+	-- Vanilla builds one fluid-container submenu row per object in fetch order.
+	-- Pair by both order and identity so two identically named barrels get their
+	-- own option rather than both attaching to the first barrel's submenu.
+	local from = 1
+	for _, candidate in ipairs(containers) do
+		local name = fluidMenuName(candidate)
+		if name then
+			for i = from, #context.options do
+				local entry = context.options[i]
+				if entry and entry.name == name then
+					if candidate == object and entry.subOption then
+						local ok, menu = pcall(function()
+							return context:getSubMenu(entry.subOption)
+						end)
+						if ok then return menu end
+					end
+					from = i + 1
+					break
+				end
+			end
 		end
 	end
 	return nil
