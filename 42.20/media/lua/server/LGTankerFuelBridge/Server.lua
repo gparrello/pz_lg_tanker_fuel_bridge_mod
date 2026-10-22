@@ -51,11 +51,44 @@ local function forEachLoadedVehicle(cell, callback)
 	end
 end
 
-local function getCisternGasPart(vehicle)
-	if not W900CisternParts or not W900CisternParts.getGasTankPart then return nil end
-	local part = W900CisternParts.getGasTankPart(vehicle)
-	if not part or not W900CisternParts.isValidGasSourcePart(part) then return nil end
+local function scriptLeafName(vehicle)
+	if not vehicle or not vehicle.getScriptName then return nil end
+	local ok, scriptName = pcall(function() return vehicle:getScriptName() end)
+	if not ok or type(scriptName) ~= "string" then return nil end
+	return scriptName:match("([^%.]+)$")
+end
+
+local function isInstalledContainerPart(part)
+	if not part or not part.isContainer or not part:isContainer() then return false end
+	local ok, installed = pcall(function()
+		return part:getInventoryItem() ~= nil or W900CisternParts.hasPartContainer(part)
+	end)
+	return ok and installed == true
+end
+
+local function getTankerPart(vehicle, partId, contentType)
+	local part = vehicle:getPartById(partId)
+	if not isInstalledContainerPart(part) then return nil end
+	if part:getContainerContentType() ~= contentType then return nil end
+	if part:getContainerCapacity() <= 0 then return nil end
 	return part
+end
+
+local function getFuelSourcePart(vehicle)
+	local scriptName = scriptLeafName(vehicle)
+	if scriptName == "SemiTrailerCistern" then
+		local part = W900CisternParts.getGasTankPart(vehicle)
+		if part and W900CisternParts.isValidGasSourcePart(part) then return part end
+		return nil
+	end
+
+	-- Dedicated tanker vehicles only: don't accidentally drain ordinary cars or boats.
+	if scriptName == "TrailerM967tanker" then
+		return getTankerPart(vehicle, "1000FuelTank", "Gasoline Storage")
+	elseif scriptName == "TrailerISOcontainerM3tanker" then
+		return getTankerPart(vehicle, "GasTank", "Gasoline")
+	end
+	return nil
 end
 
 local function centerSquare(vehicle, part)
@@ -114,7 +147,7 @@ local function tick()
 	if not cell then return end
 
 	forEachLoadedVehicle(cell, function(vehicle)
-		local part = getCisternGasPart(vehicle)
+		local part = getFuelSourcePart(vehicle)
 		if not part or part:getContainerContentAmount() <= Bridge.EPSILON then return end
 		if not remainedParked(vehicle) then return end
 

@@ -1,5 +1,5 @@
 {
     "ContextMenu_LGTankerFuelBridge_Enable": "Enable cistern auto-refill",
     "ContextMenu_LGTankerFuelBridge_Disable": "Disable cistern auto-refill",
-    "ContextMenu_LGTankerFuelBridge_Tooltip": "When a W900 cistern is parked within 5 tiles, this LG Extended Plumbing barrel receives up to 10 L of petrol every 10 in-game minutes. It will not replace other liquids."
+    "ContextMenu_LGTankerFuelBridge_Tooltip": "When a supported fuel tanker is parked within 5 tiles, this LG Extended Plumbing barrel receives up to 10 L of petrol every 10 in-game minutes. It will not replace other liquids."
 }
