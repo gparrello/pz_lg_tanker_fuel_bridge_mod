@@ -5,8 +5,14 @@ local Bridge = LGTankerFuelBridge
 Bridge.MOD_ID = "LGTankerFuelBridge"
 Bridge.AUTO_KEY = "LGTankerFuelBridgeAuto"
 Bridge.RATE_LITRES_PER_TEN_MINUTES = 10
-Bridge.RANGE = 5
+Bridge.DEFAULT_RANGE = 5
 Bridge.EPSILON = 0.01
+
+function Bridge.getRange()
+	local options = SandboxVars and SandboxVars.LGTankerFuelBridge
+	local range = options and tonumber(options.RefillRange) or Bridge.DEFAULT_RANGE
+	return math.max(1, math.floor(range))
+end
 
 function Bridge.isAutoEnabled(object)
 	if not object or not object.hasModData or not object:hasModData() then

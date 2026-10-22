@@ -1,0 +1,5 @@
+{
+    "Sandbox_LGTankerFuelBridge": "LG Tanker Fuel Bridge",
+    "Sandbox_LGTankerFuelBridge_RefillRange": "Tanker-to-barrel range",
+    "Sandbox_LGTankerFuelBridge_RefillRange_tooltip": "Maximum tile distance from the tanker fuel tank to an enabled plumbing barrel. Default: 5 tiles."
+}

@@ -160,8 +160,9 @@ local function tick()
 
 		local square = centerSquare(vehicle, part)
 		if not square then return end
-		for dy = -Bridge.RANGE, Bridge.RANGE do
-			for dx = -Bridge.RANGE, Bridge.RANGE do
+		local range = Bridge.getRange()
+		for dy = -range, range do
+			for dx = -range, range do
 				local nearby = cell:getGridSquare(square:getX() + dx, square:getY() + dy, square:getZ())
 				if nearby then
 					local objects = nearby:getObjects()

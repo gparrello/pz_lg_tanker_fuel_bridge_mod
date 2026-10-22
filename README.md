@@ -12,7 +12,7 @@ An optional automation add-on for Project Zomboid Build 42.20. It connects fuel 
 2. **Prepare a stationary collector barrel.** Empty it, then use a pipe wrench and select **Plumb into house supply** on the collector. The bridge only offers auto-refill for a collector already included in LG Extended Plumbing's supply. The barrel must be empty or contain petrol only; other liquids are never replaced.
 3. **Enable auto-refill.** Right-click the barrel and choose **Enable cistern auto-refill**. The option changes to **Disable cistern auto-refill** when it is active.
 4. **Plumb the generator into the building.** Right-click the generator and select **Plumb generator** from LG Extended Electricity. The generator must also be plugged in and usable.
-5. Keep the tanker within **5 tiles of the barrel** on the same level. The server transfers up to **10 L of petrol every 10 in-game minutes**. After the tanker is first loaded or observed, it may take up to two 10-minute checks to confirm it is parked and begin transferring. The generator can then draw petrol from the building supply.
+5. Keep the tanker within the configured range of the barrel on the same level. The range is adjustable from **1 to 20 tiles** under **Sandbox Options → LG Tanker Fuel Bridge → Tanker-to-barrel range** (default: 5). The server transfers up to **10 L of petrol every 10 in-game minutes**. After the tanker is first loaded or observed, it may take up to two 10-minute checks to confirm it is parked and begin transferring. The generator can then draw petrol from the building supply.
 
 The rSemiTruck mod also has a manual alternative: right-click its W900 cistern and choose **Drain Cistern** to transfer fuel into a nearby placed fluid container.
 
@@ -26,4 +26,4 @@ The rSemiTruck mod also has a manual alternative: right-click its W900 cistern a
 
 Required mods: `LGExtendedPlumbing` and `LGExtendedElectricity`. The tanker mods (`rSemiTruck`, `82oshkoshM911`, and `isoContainers`) are optional; their supported tanker trailers are recognized when those mods are installed and enabled.
 
-The transfer range and rate are set in `42.20/media/lua/shared/LGTankerFuelBridge/Bridge.lua` (`RANGE` and `RATE_LITRES_PER_TEN_MINUTES`).
+The transfer rate is set in `42.20/media/lua/shared/LGTankerFuelBridge/Bridge.lua` (`RATE_LITRES_PER_TEN_MINUTES`). The range is the `RefillRange` sandbox option.
